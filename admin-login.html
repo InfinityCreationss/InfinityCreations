@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin Login — InfinityCreations</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    :root{ --bg:#f7fafc; --card:#fff; --muted:#6b7280; --accent:#5b7cff; }
+    html,body{height:100%;margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial;background:var(--bg);color:#0f172a}
+    .container{max-width:1100px;margin:0 auto;padding:1rem}
+    .site-header{padding:0.6rem 0}
+    .header-inner{display:flex;align-items:center;justify-content:space-between;gap:1rem}
+    .brand{display:flex;align-items:center;gap:0.6rem;text-decoration:none;color:inherit}
+    .brand img{height:44px;border-radius:6px}
+    .brand-text .brand-title{font-weight:800}
+    .nav a{margin-right:0.6rem;text-decoration:none;color:var(--muted)}
+    .header-actions .btn{margin-left:0.4rem}
+
+    .login-outer{display:flex;align-items:center;justify-content:center;min-height:76vh;padding:1.25rem}
+    .login-card{width:100%;max-width:480px;background:var(--card);border-radius:12px;padding:1.25rem 1.5rem;box-shadow:0 10px 30px rgba(2,6,23,0.08)}
+    .title{font-size:1.25rem;font-weight:800}
+    label{font-weight:700;display:block;margin-top:0.6rem;margin-bottom:0.25rem}
+    input[type="text"],input[type="password"]{width:100%;padding:0.6rem;border-radius:8px;border:1px solid rgba(2,6,23,0.06);font-size:1rem}
+    .row{display:flex;gap:0.6rem;align-items:center;margin-top:0.9rem}
+    .btn{cursor:pointer;border:none;padding:0.55rem 0.75rem;border-radius:8px;font-weight:700}
+    .btn.primary{background:var(--accent);color:white}
+    .btn.ghost{background:transparent;border:1px solid rgba(2,6,23,0.06)}
+    .muted{color:var(--muted);font-size:0.95rem}
+    .feedback{margin-top:0.6rem;font-size:0.95rem;min-height:1.1em}
+    .small{font-size:0.9rem;color:var(--muted);margin-top:0.5rem}
+    a.inline-link{color:var(--accent);text-decoration:none;font-weight:700}
+  </style>
+</head>
+<body>
+  <header class="site-header container" role="banner">
+    <div class="header-inner">
+      <a href="index.html" class="brand" aria-label="InfinityCreations home">
+        <img src="logo.jpeg" alt="InfinityCreations logo" onerror="this.style.display='none'"/>
+        <div class="brand-text">
+          <span class="brand-title">InfinityCreations</span>
+          <span class="brand-sub muted">Admin</span>
+        </div>
+      </a>
+
+      <nav class="nav" aria-label="Main navigation">
+        <a href="index.html">Home</a>
+        <a href="products.html">Products</a>
+        <a href="contact.html">Contact</a>
+      </nav>
+
+      <div class="header-actions">
+        <a class="btn ghost" href="cart.html">Cart (<span id="cart-count">0</span>)</a>
+        <a class="btn ghost" id="header-admin-link" href="admin-login.html">Admin</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="login-outer" role="main">
+    <div class="login-card" aria-labelledby="login-title">
+      <div>
+        <div id="login-title" class="title">Admin login</div>
+        
+      </div>
+
+      <form id="login-form" onsubmit="return false;" autocomplete="off" novalidate>
+        <label for="username">Username</label>
+        <input id="username" name="username" type="text" placeholder="admin" autocomplete="username" />
+
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" placeholder="Enter password" autocomplete="current-password" />
+
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:0.6rem;margin-top:0.9rem;">
+          <div style="display:flex;gap:0.4rem;align-items:center;">
+            <input id="remember" type="checkbox" />
+            <label for="remember" style="margin:0;font-weight:600;font-size:0.95rem;">Remember me</label>
+          </div>
+
+          <div style="display:flex;gap:0.5rem;">
+            <button id="cancel-btn" class="btn ghost" type="button">Cancel</button>
+            <button id="login-btn" class="btn primary" type="button">Login</button>
+          </div>
+        </div>
+
+        <div id="feedback" class="feedback muted" aria-live="polite"></div>
+        
+      </form>
+    </div>
+  </main>
+
+  <footer class="site-footer container" role="contentinfo" style="padding:1rem 0;">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <div>© InfinityCreations — handcrafted gifts</div>
+      <div class="muted small">Demo admin panel</div>
+    </div>
+  </footer>
+
+  <script>
+    (function(){
+      // CONFIG: change if admin.html is in a subfolder
+      const ADMIN_PAGE = 'admin.html';
+      const ADMIN_SESSION_KEY = 'ic_admin_logged_in';
+      const DEMO_USERNAME = 'admin@infinitycreations';
+      const DEMO_PASSWORD = 'Hani@25122001'; // change for production
+
+      const $ = s => document.querySelector(s);
+      const setFeedback = (msg, isError=false) => {
+        const el = $('#feedback');
+        if (!el) return;
+        el.textContent = msg || '';
+        el.style.color = isError ? '#b91c1c' : '';
+      };
+
+      function currentFilename() {
+        try {
+          const parts = location.pathname.split('/');
+          return parts[parts.length - 1] || 'index.html';
+        } catch (e) { return ''; }
+      }
+
+      document.addEventListener('DOMContentLoaded', () => {
+        // prevent header admin link from reloading this same page
+        const headerAdmin = $('#header-admin-link');
+        if (headerAdmin) {
+          headerAdmin.addEventListener('click', (ev) => {
+            if (currentFilename() === 'admin-login.html') ev.preventDefault();
+            // else allow normal anchor navigation
+          });
+        }
+
+        // If already logged in, redirect to admin page (but avoid loop if we're already on admin page)
+        const logged = localStorage.getItem(ADMIN_SESSION_KEY) === '1';
+        if (logged && currentFilename() !== ADMIN_PAGE) {
+          // redirect to admin and stop further setup
+          setFeedback('Already logged in — redirecting to Admin panel...');
+          setTimeout(() => { location.href = ADMIN_PAGE; }, 250);
+          return;
+        }
+
+        // wire UI
+        const loginBtn = $('#login-btn');
+        const cancelBtn = $('#cancel-btn');
+        const usernameEl = $('#username');
+        const passwordEl = $('#password');
+        const rememberEl = $('#remember');
+
+        // prefill demo username
+        if (usernameEl) usernameEl.value = DEMO_USERNAME;
+
+        // enter key triggers login
+        [usernameEl, passwordEl].forEach(el => {
+          if (!el) return;
+          el.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') loginBtn.click();
+          });
+        });
+
+        cancelBtn && cancelBtn.addEventListener('click', () => { location.href = 'index.html'; });
+
+        loginBtn && loginBtn.addEventListener('click', () => {
+          const user = (usernameEl && usernameEl.value || '').trim();
+          const pass = (passwordEl && passwordEl.value || '').trim();
+
+          if (!user || !pass) { setFeedback('Please enter username and password', true); return; }
+
+          // Demo validation
+          if (pass === DEMO_PASSWORD) {
+            // set session and redirect to admin page
+            try { localStorage.setItem(ADMIN_SESSION_KEY, '1'); } catch(e) {}
+            if (rememberEl && rememberEl.checked) {
+              try { localStorage.setItem('ic_admin_remember','1'); } catch(e) {}
+            } else {
+              try { localStorage.removeItem('ic_admin_remember'); } catch(e) {}
+            }
+
+            setFeedback('Login successful — redirecting to Admin panel...');
+            setTimeout(() => { location.href = ADMIN_PAGE; }, 200);
+            return;
+          } else {
+            setFeedback('Invalid credentials', true);
+            if (passwordEl) { passwordEl.value = ''; passwordEl.focus(); }
+          }
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>InfinityCreations — Home</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=Dancing+Script:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="header-inner">
+        <a href="index.html" class="brand"
+          ><div class="logo"></div>
+          <img
+            src="logo.jpeg"
+            alt="InfinityCreations infinity sign logo"
+            style="height: 65px; width: auto; margin-right: 4px"
+          />
+          <div class="brand-text">
+            <span class="brand-title">InfinityCreations</span
+            ><span class="brand-sub">Handmade gifts & hoops</span>
+          </div></a
+        >
+        <nav class="nav">
+          <a href="index.html">Home</a>
+          <a href="products.html">products</a>
+          <a href="about.html">About</a>
+          <a href="contact.html">Contact</a>
+        </nav>
+        <div class="header-actions">
+          <div class="header-actions">
+
+  <!-- header -->
+<div class="header-actions">
+  <button id="cart-btn" class="btn ghost">
+    Cart (<span id="cart-count">0</span>)
+  </button>
+
+
+  <!-- Admin: use an anchor so the browser requests the file directly -->
+  <a id="admin-link" class="btn ghost" href="admin-login.html">Admin Login</a>
+</div>
+
+</div>
+
+
+
+</div>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero container">
+        <div class="hero-grid">
+          <div class="hero-content">
+            <h1>Hand-stitched keepsakes, crafted to hold memories.</h1>
+            <p class="lead">
+              Beautiful embroidery hoops, cuddly soft toys, and curated gift
+              packaging — perfect for thoughtful gifting.
+            </p>
+            <div class="hero-cta">
+              <a href="products.html" class="btn primary">Shop Collections</a
+              ><a href="about.html" class="btn ghost">Learn About Us</a>
+            </div>
+          </div>
+          <div class="hero-image" aria-hidden="true">
+            <img src="homepagehoop.jpeg" alt="Floral embroidery hoop example" />
+          </div>
+        </div>
+      </section>
+
+      <section class="section container">
+        <div class="section-head">
+          <h2>Featured</h2>
+          <a href="products.html" class="btn ghost">View all</a>
+        </div>
+        <div id="featured-grid" class="products-grid"></div>
+      </section>
+
+      <section class="section container about-preview">
+        <div class="about-preview-inner">
+          <div>
+            <h2>About our studio</h2>
+            <p>
+              Small-batch studio making handcrafted embroidery hoops and soft
+              toys. Quality materials, careful packaging — made for gifting.
+            </p>
+            <a href="about.html" class="btn primary">Our Story</a>
+          </div>
+          <div class="about-image">
+            <img src="softtoys.jpeg" alt="Soft toy" />
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer container footer-inner">
+      <div class="footer-content">
+        <p>All Copy Rights Reserved @ InfintyCreations</p>
+        <div class="socials">Instagram: <a href="#">@infinitycreations</a></div>
+      </div>
+    </footer>
+
+    <div id="product-modal" class="modal" aria-hidden="true">...</div>
+
+    <script src="script.js" type="module"></script>
+  </body>
+</html>

@@ -1,0 +1,452 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Checkout — InfinityCreations</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    /* Checkout updated styles */
+    .checkout-wrap { max-width: 1200px; margin: 2rem auto; padding: 1.25rem; }
+    .checkout-grid { display: grid; grid-template-columns: 1fr 420px; gap: 1.5rem; align-items:start; }
+    .card { background: white; border-radius: 12px; padding: 1rem; box-shadow: 0 6px 20px rgba(14,18,28,0.06); }
+    .section-title { font-weight:800; font-size:1.05rem; margin-bottom:0.6rem }
+    .cart-item { display:flex; gap:0.75rem; padding:0.6rem 0; border-bottom:1px solid rgba(0,0,0,0.04); align-items:center }
+    .cart-item img { width:72px; height:72px; object-fit:cover; border-radius:8px }
+    .qty-controls { display:flex; gap:0.4rem; align-items:center }
+    .qty-controls button { padding:0.25rem 0.5rem; border-radius:6px; border:1px solid rgba(0,0,0,0.06); background:transparent; cursor:pointer }
+    .summary-row { display:flex;justify-content:space-between;padding:0.45rem 0 }
+    .coupon-row { display:flex; gap:0.6rem; margin:0.6rem 0 }
+    .coupon-row input { flex:1; padding:0.55rem; border-radius:8px; border:1px solid rgba(0,0,0,0.06) }
+    .muted { color:var(--muted) }
+    .place-btn { width:100%; padding:0.85rem; font-size:1rem; border-radius:10px }
+    @media (max-width:980px){ .checkout-grid{grid-template-columns:1fr} .checkout-wrap{padding:1rem} }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="index.html" class="brand"><div class="logo">∞</div><div class="brand-text"><span class="brand-title">InfinityCreations</span><span class="brand-sub">Checkout</span></div></a>
+      <nav class="nav"><a href="index.html">Home</a><a href="products.html">Products</a><a href="cart.html">Cart</a><a href="contact.html">Contact</a></nav>
+      <div class="header-actions"><button id="cart-btn" class="btn ghost">Cart (<span id="cart-count">0</span>)</button></div>
+    </div>
+  </header>
+
+  <main class="container checkout-wrap">
+    <h1 style="margin-bottom:1rem">Checkout</h1>
+
+    <div class="checkout-grid">
+      <!-- LEFT: Address, order items, payment -->
+      <div>
+        <div class="card" style="margin-bottom:1rem">
+          <div class="section-title">Delivery Address</div>
+
+          <div id="saved-address" style="margin-bottom:0.6rem"></div>
+
+          <form id="address-form" onsubmit="return false;">
+            <div style="display:flex;gap:0.6rem;">
+              <input id="addr-name" placeholder="Full name" style="flex:1;padding:0.6rem;border-radius:8px;border:1px solid rgba(0,0,0,0.06)" required>
+              <input id="addr-phone" placeholder="Phone" style="width:140px;padding:0.6rem;border-radius:8px;border:1px solid rgba(0,0,0,0.06)" required>
+            </div>
+            <input id="addr-line1" placeholder="Flat, House no., Building, Company, Apartment" style="width:100%;padding:0.6rem;border-radius:8px;border:1px solid rgba(0,0,0,0.06);margin-top:0.6rem" required>
+            <input id="addr-line2" placeholder="Area, Colony, Street, Sector, Village" style="width:100%;padding:0.6rem;border-radius:8px;border:1px solid rgba(0,0,0,0.06);margin-top:0.6rem">
+            <div style="display:flex;gap:0.6rem;margin-top:0.6rem">
+              <input id="addr-city" placeholder="City" style="flex:1;padding:0.6rem;border-radius:8px;border:1px solid rgba(0,0,0,0.06)" required>
+              <input id="addr-pincode" placeholder="Pincode" style="width:140px;padding:0.6rem;border-radius:8px;border:1px solid rgba(0,0,0,0.06)" required>
+            </div>
+            <div style="display:flex;gap:0.6rem;margin-top:0.6rem">
+              <select id="addr-type" style="padding:0.6rem;border-radius:8px;border:1px solid rgba(0,0,0,0.06)">
+                <option>Home</option><option>Work</option><option>Other</option>
+              </select>
+              <button id="save-address" class="btn primary" style="margin-left:auto">Save Address</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Order items with ability to update qty here -->
+        <div class="card" style="margin-bottom:1rem">
+          <div class="section-title">Items</div>
+          <div id="checkout-items" style="max-height:340px; overflow:auto; margin-bottom:0.6rem"></div>
+          <div id="checkout-empty" class="muted" style="display:none">Your cart is empty. <a href="products.html">Browse products</a></div>
+        </div>
+
+        <div class="card" style="margin-bottom:1rem">
+          <div class="section-title">Payment</div>
+          <div class="pay-method" id="payment-methods">
+            <div class="pay-option selected" data-method="cod"><input type="radio" name="pay" checked /> Cash on Delivery (COD)</div>
+            <div class="pay-option" data-method="card"><input type="radio" name="pay" /> Debit/Credit Card</div>
+            <div class="pay-option" data-method="upi"><input type="radio" name="pay" /> UPI</div>
+          </div>
+
+          <div id="card-box" style="margin-top:0.8rem;display:none">
+            <input id="card-number" placeholder="Card number" maxlength="19" style="width:100%;padding:0.6rem;border-radius:8px;border:1px solid rgba(0,0,0,0.06);margin-bottom:0.5rem">
+            <div style="display:flex;gap:0.6rem">
+              <input id="card-exp" placeholder="MM/YY" style="flex:1;padding:0.6rem;border-radius:8px;border:1px solid rgba(0,0,0,0.06)">
+              <input id="card-cvv" placeholder="CVV" maxlength="3" style="width:120px;padding:0.6rem;border-radius:8px;border:1px solid rgba(0,0,0,0.06)">
+            </div>
+          </div>
+
+          <div id="upi-box" style="margin-top:0.8rem;display:none">
+            <input id="upi-id" placeholder="yourname@bank" style="width:100%;padding:0.6rem;border-radius:8px;border:1px solid rgba(0,0,0,0.06)">
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: order summary & coupon -->
+      <aside>
+        <div class="card">
+          <div class="section-title">Order Summary</div>
+
+          <div id="items-summary" style="margin-bottom:0.6rem" class="muted"></div>
+
+          <div class="coupon-row">
+            <input id="coupon-code" placeholder="Coupon code (WELCOME50 / FLAT100 / FREESHIP)" />
+            <button id="apply-coupon" class="btn ghost">Apply</button>
+          </div>
+          <div id="coupon-feedback" class="muted" style="margin-bottom:0.6rem"></div>
+
+          <div class="summary-row"><div>Subtotal</div><div id="subtotal-val">₹0</div></div>
+          <div class="summary-row"><div>Discount</div><div id="discount-val">-₹0</div></div>
+          <div class="summary-row"><div>Delivery</div><div id="delivery-val">₹0</div></div>
+          <div class="summary-row"><div>Tax (GST)</div><div id="tax-val">₹0</div></div>
+          <hr>
+          <div class="summary-row" style="font-weight:800;"><div>Total</div><div id="total-val">₹0</div></div>
+
+          <div style="margin-top:0.8rem">
+            <button id="place-order" class="btn primary place-btn">Place Order</button>
+            <button id="go-to-cart" class="btn ghost" style="margin-top:0.6rem;width:100%">Edit Cart</button>
+          </div>
+        </div>
+
+        <div style="height:12px"></div>
+        <div class="card" style="text-align:center;color:var(--muted)">Demo checkout • no real payment collected</div>
+      </aside>
+    </div>
+  </main>
+
+  <!-- order success modal -->
+  <div id="order-modal" class="modal" aria-hidden="true">
+    <div class="modal-panel" role="dialog" aria-modal="true" style="max-width:640px">
+      <button class="modal-close" aria-label="Close">✕</button>
+      <div style="padding:1rem">
+        <h2>Order Placed</h2>
+        <p id="order-msg">Thanks! Your order #<span id="order-id"></span> has been placed.</p>
+        <div style="display:flex;gap:0.6rem;justify-content:flex-end;margin-top:1rem">
+          <a href="index.html" class="btn ghost">Continue Shopping</a>
+          <button id="order-ok" class="btn primary">Okay</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- include shared script that exposes window.IC helpers -->
+  <script src="script.js"></script>
+
+  <script>
+    (function(){
+      const LOCAL_CART_KEY = 'ic_cart';
+      const LOCAL_COUPON_KEY = 'ic_active_coupon';
+      const LOCAL_ORDERS_KEY = 'ic_orders';
+      const DELIVERY_CHARGE = 49;
+      const TAX_RATE = 0.18;
+
+      const COUPONS = {
+        'WELCOME50': { type: 'percent', value: 50, maxDiscount: 250, minCart: 500 },
+        'FLAT100': { type: 'flat', value: 100, minCart: 300 },
+        'FREESHIP': { type: 'shipping', value: 1, minCart: 800 }
+      };
+
+      const $ = s => document.querySelector(s);
+      const $$ = s => Array.from(document.querySelectorAll(s));
+
+      // load cart
+      function loadCartLocal(){ try { return JSON.parse(localStorage.getItem(LOCAL_CART_KEY) || '[]') || []; } catch(e){ return []; } }
+      function saveCartLocal(cart){ localStorage.setItem(LOCAL_CART_KEY, JSON.stringify(cart)); if (window.IC && typeof window.IC.updateCartUI === 'function') window.IC.updateCartUI(); }
+
+      // coupon persistence
+      function getActiveCoupon(){ try { return JSON.parse(localStorage.getItem(LOCAL_COUPON_KEY) || 'null'); } catch(e){ return null; } }
+      function setActiveCoupon(c){ localStorage.setItem(LOCAL_COUPON_KEY, JSON.stringify(c)); }
+      function clearActiveCoupon(){ localStorage.removeItem(LOCAL_COUPON_KEY); }
+
+      // address persistence
+      function loadSavedAddress(){ try { return JSON.parse(localStorage.getItem('ic_saved_address') || 'null'); } catch(e){ return null; } }
+      function saveAddress(addr){ localStorage.setItem('ic_saved_address', JSON.stringify(addr)); }
+
+      // calculate totals
+      function calcTotals(cart, activeCoupon){
+        const subtotal = cart.reduce((s,i)=> s + (Number(i.price||0) * Number(i.qty||1)), 0);
+        let discount = 0;
+        let delivery = DELIVERY_CHARGE;
+        if (activeCoupon) {
+          if (activeCoupon.type === 'percent') {
+            discount = Math.min(Math.round(subtotal * (activeCoupon.value/100)), activeCoupon.maxDiscount || Infinity);
+          } else if (activeCoupon.type === 'flat') {
+            discount = activeCoupon.value;
+          } else if (activeCoupon.type === 'shipping') {
+            delivery = 0;
+          }
+        }
+        const taxable = Math.max(0, subtotal - discount);
+        const tax = Math.round(taxable * TAX_RATE);
+        const total = Math.max(0, subtotal - discount + tax + delivery);
+        return { subtotal, discount, delivery, tax, total };
+      }
+
+      // format
+      function formatPrice(v){ return '₹' + Number(v||0).toFixed(0); }
+
+      // render items list (with qty controls)
+      async function renderCheckoutItems(){
+        const cart = loadCartLocal();
+        const wrap = $('#checkout-items');
+        const empty = $('#checkout-empty');
+        wrap.innerHTML = '';
+        if (!cart.length) { empty.style.display = ''; return; }
+        empty.style.display = 'none';
+
+        // try to get detailed product metadata
+        let catalog = {};
+        try {
+          if (window.IC && typeof window.IC.getProducts === 'function') {
+            const pList = window.IC.getProducts();
+            if (Array.isArray(pList)) pList.forEach(p => { catalog[p.id] = p; });
+            else Object.keys(pList||{}).forEach(k => { catalog[k] = pList[k]; });
+          } else {
+            const local = JSON.parse(localStorage.getItem('ic_products_local') || '[]') || [];
+            local.forEach(p => catalog[p.id] = p);
+          }
+        } catch(e){ console.error('catalog load error', e); }
+
+        // build DOM
+        cart.forEach(item => {
+          const p = catalog[item.id] || {};
+          const img = p.image || (p.images && p.images[0]) || (item.image || 'images/placeholder.png');
+          const title = p.title || item.title || 'Product';
+          const price = Number(item.price || p.price || 0);
+          const qty = Number(item.qty || 1);
+
+          const row = document.createElement('div');
+          row.className = 'cart-item';
+          row.innerHTML = `
+            <img src="${img}" alt="${title}">
+            <div style="flex:1">
+              <div style="font-weight:700">${title}</div>
+              <div class="muted" style="margin-top:6px">${p.category || ''}</div>
+              <div style="margin-top:8px;display:flex;gap:0.8rem;align-items:center">
+                <div class="qty-controls">
+                  <button class="qty-dec" data-id="${item.id}">−</button>
+                  <input class="qty-input" data-id="${item.id}" type="number" min="1" value="${qty}" style="width:72px;padding:0.35rem;border-radius:6px;border:1px solid rgba(0,0,0,0.06);text-align:center">
+                  <button class="qty-inc" data-id="${item.id}">+</button>
+                </div>
+                <div style="margin-left:auto;font-weight:800">${formatPrice(price * qty)}</div>
+              </div>
+            </div>
+          `;
+          wrap.appendChild(row);
+        });
+
+        // bind qty handlers
+        $$('.qty-inc').forEach(b => b.addEventListener('click', (e) => changeQty(e.currentTarget.dataset.id, 1)));
+        $$('.qty-dec').forEach(b => b.addEventListener('click', (e) => changeQty(e.currentTarget.dataset.id, -1)));
+        $$('.qty-input').forEach(inp => inp.addEventListener('change', (e) => {
+          const id = e.currentTarget.dataset.id;
+          const val = Math.max(1, Number(e.currentTarget.value || 1));
+          setQty(id, val);
+        }));
+
+        // update summary area text
+        const itemsSummary = cart.map(it => `${it.qty}× ${ (catalog[it.id] && catalog[it.id].title) || it.title }`).join(', ');
+        $('#items-summary').textContent = itemsSummary;
+        recalcAndRender();
+      }
+
+      function changeQty(id, delta){
+        const cart = loadCartLocal();
+        const idx = cart.findIndex(i => String(i.id) === String(id));
+        if (idx === -1) return;
+        cart[idx].qty = Math.max(1, Number(cart[idx].qty || 1) + delta);
+        saveCartLocal(cart);
+        renderCheckoutItems();
+      }
+
+      function setQty(id, qty) {
+        const cart = loadCartLocal();
+        const idx = cart.findIndex(i => String(i.id) === String(id));
+        if (idx === -1) return;
+        cart[idx].qty = Math.max(1, Number(qty || 1));
+        saveCartLocal(cart);
+        renderCheckoutItems();
+      }
+
+      function removeItem(id) {
+        let cart = loadCartLocal();
+        cart = cart.filter(i => String(i.id) !== String(id));
+        saveCartLocal(cart);
+        renderCheckoutItems();
+      }
+
+      // coupon handling
+      function applyCouponCode(code) {
+        code = (code || '').trim().toUpperCase();
+        if (!code) { showCouponFeedback('Enter coupon code'); return; }
+        const c = COUPONS[code];
+        if (!c) { showCouponFeedback('Invalid coupon'); return; }
+        const cart = loadCartLocal();
+        const subtotal = cart.reduce((s,i) => s + (Number(i.price||0) * Number(i.qty||1)), 0);
+        if (c.minCart && subtotal < c.minCart) { showCouponFeedback(`Minimum cart ₹${c.minCart} required`); return; }
+        const payload = { code, ...c };
+        setActiveCoupon(payload);
+        showCouponFeedback(`Coupon ${code} applied`);
+        recalcAndRender();
+      }
+      function clearCoupon() { clearActiveCoupon(); $('#coupon-code').value = ''; showCouponFeedback('Coupon cleared'); recalcAndRender(); }
+      function showCouponFeedback(msg){ $('#coupon-feedback').textContent = msg || ''; }
+
+      // recalc summary UI
+      function recalcAndRender() {
+        const cart = loadCartLocal();
+        const activeCoupon = getActiveCoupon();
+        const t = calcTotals(cart, activeCoupon);
+        $('#subtotal-val').textContent = formatPrice(t.subtotal);
+        $('#discount-val').textContent = `- ${formatPrice(t.discount)}`;
+        $('#delivery-val').textContent = formatPrice(t.delivery);
+        $('#tax-val').textContent = formatPrice(t.tax);
+        $('#total-val').textContent = formatPrice(t.total);
+        // coupon input reflect
+        if (activeCoupon) $('#coupon-code').value = activeCoupon.code || '';
+        else $('#coupon-code').value = '';
+      }
+
+      // address + save
+      function renderSavedAddress(){
+        const a = loadSavedAddress();
+        const wrap = $('#saved-address');
+        if (!a) { wrap.innerHTML = '<div class="muted">No saved address. Please fill the form and save.</div>'; return; }
+        wrap.innerHTML = `<div style="padding:0.6rem;border-radius:8px;border:1px solid rgba(0,0,0,0.06)"><div style="font-weight:700">${escapeHtml(a.name)} • ${escapeHtml(a.phone)}</div><div class="muted">${escapeHtml(a.line1)}${a.line2 ? ', ' + escapeHtml(a.line2) : ''}, ${escapeHtml(a.city)} - ${escapeHtml(a.pincode)}</div></div>`;
+      }
+
+      function saveAddressFromForm(){
+        const name = $('#addr-name').value.trim();
+        const phone = $('#addr-phone').value.trim();
+        const line1 = $('#addr-line1').value.trim();
+        const line2 = $('#addr-line2').value.trim();
+        const city = $('#addr-city').value.trim();
+        const pincode = $('#addr-pincode').value.trim();
+        const type = $('#addr-type').value || 'Home';
+        if (!name || !phone || !line1 || !city || !pincode) return alert('Please fill required address fields');
+        const addr = { name, phone, line1, line2, city, pincode, type };
+        saveAddress(addr);
+        renderSavedAddress();
+        alert('Address saved');
+      }
+
+      // place order (demo)
+      function placeOrder(){
+        const cart = loadCartLocal();
+        if (!cart.length) return alert('Your cart is empty');
+        const addr = loadSavedAddress();
+        if (!addr) return alert('Please save a delivery address first');
+
+        const method = document.querySelector('.pay-option.selected')?.dataset?.method || 'cod';
+        if (method === 'card') {
+          const num = $('#card-number').value.trim(); const cvv = $('#card-cvv').value.trim();
+          if (!num || !cvv) return alert('Enter card details (demo)');
+        }
+        if (method === 'upi') {
+          const upi = $('#upi-id').value.trim();
+          if (!upi) return alert('Enter UPI id (demo)');
+        }
+
+        const activeCoupon = getActiveCoupon();
+        const totals = calcTotals(cart, activeCoupon);
+
+        // create order object and persist
+        const orderId = 'IC' + Date.now().toString().slice(-8);
+        const order = {
+          id: orderId,
+          createdAt: new Date().toISOString(),
+          items: cart,
+          totals,
+          address: loadSavedAddress(),
+          payment: method,
+          coupon: activeCoupon || null
+        };
+        try {
+          const orders = JSON.parse(localStorage.getItem(LOCAL_ORDERS_KEY) || '[]') || [];
+          orders.unshift(order);
+          localStorage.setItem(LOCAL_ORDERS_KEY, JSON.stringify(orders, null, 2));
+        } catch(e){ console.error('store order failed', e); }
+
+        // show modal
+        $('#order-id').textContent = orderId;
+        $('#order-msg').textContent = `Thanks! Your order #${orderId} has been placed. We will notify you with updates.`;
+        const om = $('#order-modal'); if (om) om.setAttribute('aria-hidden','false');
+
+        // clear cart & coupon
+        localStorage.removeItem(LOCAL_CART_KEY);
+        clearActiveCoupon();
+        if (window.IC && typeof window.IC.updateCartUI === 'function') window.IC.updateCartUI();
+        renderCheckoutItems();
+        recalcAndRender();
+      }
+
+      // helpers
+      function escapeHtml(s){ if (!s) return ''; return String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;'); }
+
+      // wire UI events
+      $('#apply-coupon').addEventListener('click', () => applyCouponCode($('#coupon-code').value || ''));
+      $('#coupon-code').addEventListener('keydown', (e) => { if (e.key === 'Enter') { applyCouponCode($('#coupon-code').value || ''); e.preventDefault(); } });
+
+      $('#save-address').addEventListener('click', saveAddressFromForm);
+
+      // payment selection
+      document.querySelectorAll('.pay-option').forEach(el => {
+        el.addEventListener('click', () => {
+          document.querySelectorAll('.pay-option').forEach(x => x.classList.remove('selected'));
+          el.classList.add('selected');
+          const m = el.dataset.method;
+          $('#card-box').style.display = m === 'card' ? '' : 'none';
+          $('#upi-box').style.display = m === 'upi' ? '' : 'none';
+        });
+      });
+
+      $('#place-order').addEventListener('click', placeOrder);
+      $('#go-to-cart').addEventListener('click', () => location.href = 'cart.html');
+
+      // order modal controls
+      const orderModal = $('#order-modal');
+      if (orderModal) {
+        orderModal.addEventListener('click', (e) => { if (e.target === orderModal) orderModal.setAttribute('aria-hidden','true'); });
+        orderModal.querySelector('.modal-close').addEventListener('click', () => orderModal.setAttribute('aria-hidden','true'));
+        $('#order-ok').addEventListener('click', () => { orderModal.setAttribute('aria-hidden','true'); location.href = 'index.html'; });
+      }
+
+      // initial render
+      renderSavedAddress();
+      renderCheckoutItems();
+
+      // reflect any external cart changes (cart.html or other tab)
+      window.addEventListener('storage', (e) => {
+        if (e.key === LOCAL_CART_KEY) {
+          renderCheckoutItems();
+        }
+        if (e.key === LOCAL_COUPON_KEY) {
+          recalcAndRender();
+        }
+      });
+
+      // small UX: populate coupon box if saved
+      const savedC = getActiveCoupon();
+      if (savedC) $('#coupon-code').value = savedC.code || '';
+      recalcAndRender();
+
+      // expose functions (optional)
+      window.IC = window.IC || {};
+      window.IC.recalcCheckout = recalcAndRender;
+      window.IC.renderCheckoutItems = renderCheckoutItems;
+
+    })();
+  </script>
+</body>
+</html>

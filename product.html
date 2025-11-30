@@ -1,0 +1,448 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Product — InfinityCreations</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    :root{
+      --bg:#fbfdff; --card:#fff; --muted:#6b7280; --accent:#6a8cff; --accent-2:#0f5132;
+      --shadow: 0 10px 30px rgba(2,6,23,0.06);
+    }
+    html,body{height:100%;margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial;background:var(--bg);color:#0f172a}
+    .container{max-width:1100px;margin:0 auto;padding:1rem}
+    .site-header{padding:0.5rem 0}
+    .header-inner{display:flex;align-items:center;gap:1rem;justify-content:space-between}
+    .brand{display:flex;align-items:center;gap:0.6rem;text-decoration:none;color:inherit}
+    .brand img{height:44px;border-radius:6px}
+    .nav a{margin-right:0.6rem;text-decoration:none;color:var(--muted)}
+    .header-actions .btn{margin-left:0.4rem}
+
+    main.product-wrap{max-width:1100px;margin:1.25rem auto;padding:1rem}
+    .product-grid{display:grid;grid-template-columns: 1fr 420px; gap:1.25rem; align-items:start}
+    @media (max-width:980px){ .product-grid{grid-template-columns:1fr} }
+
+    .gallery { background:var(--card); padding:1rem; border-radius:12px; box-shadow:var(--shadow) }
+    .main-image { height:460px; width:100%; object-fit:cover; border-radius:10px; background:#f0f4ff; display:block; cursor:zoom-in }
+    .thumb-row { display:flex; gap:0.5rem; margin-top:0.6rem; flex-wrap:wrap }
+    .thumb-row img { width:84px; height:84px; object-fit:cover; border-radius:8px; cursor:pointer; border:2px solid transparent }
+    .thumb-row img.active { border-color:var(--accent) }
+
+    .info { background:var(--card); padding:1rem; border-radius:12px; box-shadow:var(--shadow) }
+    .title { font-size:1.35rem; font-weight:800; margin-bottom:0.25rem }
+    .meta { color:var(--muted); margin-bottom:0.6rem }
+    .price { font-weight:900; font-size:1.25rem; color:var(--accent-2); margin-bottom:0.6rem }
+    .desc { line-height:1.5; color:#111827; margin-bottom:1rem; white-space:pre-wrap }
+
+    .qty-row { display:flex; gap:0.6rem; align-items:center; margin-bottom:0.8rem }
+    .qty-row input[type="number"] { width:96px; padding:0.5rem; border-radius:8px; border:1px solid rgba(2,6,23,0.06); text-align:center }
+    .btn { cursor:pointer; border:none; padding:0.6rem 0.85rem; border-radius:8px; font-weight:700 }
+    .btn.primary{ background:var(--accent); color:white }
+    .btn.ghost{ background:transparent; border:1px solid rgba(2,6,23,0.06) }
+
+    .specs { margin-top:0.6rem; font-size:0.95rem; color:var(--muted) }
+
+    .not-found { text-align:center; padding:2rem; background:var(--card); border-radius:12px; box-shadow:var(--shadow) }
+
+    .actions { display:flex; gap:0.6rem; margin-top:0.6rem; flex-wrap:wrap }
+    .badge { padding:0.25rem 0.5rem;border-radius:999px;background:#eef2ff;color:var(--accent);font-weight:700 }
+
+    footer.site-footer { margin-top:2rem; padding:1rem 0; background:transparent }
+    .muted { color:var(--muted) }
+
+    /* --- Fullscreen image modal / zoom viewer --- */
+    .img-modal {
+      position: fixed;
+      inset: 0;
+      display: none;
+      z-index: 120;
+      align-items: center;
+      justify-content: center;
+      background: rgba(2,6,23,0.5);
+      backdrop-filter: blur(6px);
+    }
+    .img-modal[aria-hidden="false"] { display: flex; }
+
+    .img-modal-panel {
+      position: relative;
+      max-width: 95%;
+      max-height: 90%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:12px;
+    }
+
+    .img-modal-image {
+      max-width: calc(100vw - 160px);
+      max-height: calc(100vh - 120px);
+      object-fit: contain;
+      border-radius: 10px;
+      transform-origin: center center;
+      transition: transform 220ms cubic-bezier(.2,.9,.3,1), opacity 180ms;
+      box-shadow: 0 18px 40px rgba(2,6,23,0.45);
+      background: #fff;
+    }
+
+    .img-modal-toolbar {
+      position: absolute;
+      top: 18px;
+      right: 18px;
+      display:flex;
+      gap:8px;
+      z-index: 130;
+    }
+
+    .img-modal-controls {
+      position: absolute;
+      left: 12px;
+      right: 12px;
+      bottom: 22px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      color: #fff;
+      font-weight:700;
+      z-index: 130;
+    }
+
+    .img-modal-btn {
+      background: rgba(0,0,0,0.35);
+      border: 1px solid rgba(255,255,255,0.12);
+      color: white;
+      padding: 8px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      backdrop-filter: blur(4px);
+    }
+
+    .img-modal-arrow {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 48px;
+      height: 48px;
+      border-radius: 999px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background: rgba(0,0,0,0.45);
+      color: white;
+      cursor: pointer;
+      z-index: 140;
+    }
+    .img-modal-arrow.left { left: 18px; }
+    .img-modal-arrow.right { right: 18px; }
+
+    @media (max-width:600px){
+      .main-image { height:320px }
+      .img-modal-arrow { width:40px;height:40px; }
+    }
+  </style>
+</head>
+<body>
+  <!-- header -->
+  <header class="site-header container">
+    <div class="header-inner">
+      <a href="index.html" class="brand">
+        <img src="logo.jpeg" alt="InfinityCreations logo" onerror="this.style.display='none'"/>
+        <div class="brand-text">
+          <span class="brand-title">InfinityCreations</span>
+          <div class="muted small">Handmade gifts</div>
+        </div>
+      </a>
+
+      <nav class="nav" aria-label="Main">
+        <a href="index.html">Home</a>
+        <a href="products.html">Products</a>
+        <a href="about.html">About</a>
+        <a href="contact.html">Contact</a>
+      </nav>
+
+      <div class="header-actions">
+        <a class="btn ghost" href="cart.html">Cart (<span id="cart-count">0</span>)</a>
+        <a class="btn ghost" href="admin-login.html">Admin</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="product-wrap container" id="main">
+    <div id="product-root"></div>
+  </main>
+
+  <footer class="site-footer container">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <div>© InfinityCreations — handcrafted gifts</div>
+      <div class="muted">Demo store</div>
+    </div>
+  </footer>
+
+  <!-- Image modal -->
+  <div id="img-modal" class="img-modal" aria-hidden="true" role="dialog" aria-label="Image viewer">
+    <div class="img-modal-panel" role="document">
+      <button id="img-close" class="img-modal-btn" aria-label="Close (Esc)">Close</button>
+
+      <div id="modal-left-arrow" class="img-modal-arrow left" title="Previous (←)" aria-hidden="false">‹</div>
+      <img id="modal-image" class="img-modal-image" src="" alt="Full image" />
+      <div id="modal-right-arrow" class="img-modal-arrow right" title="Next (→)" aria-hidden="false">›</div>
+
+      <div class="img-modal-controls" aria-hidden="false">
+        <div id="modal-counter" style="color:#fff"></div>
+        <div style="display:flex;gap:8px">
+          <a id="modal-download" class="img-modal-btn" href="#" download>Download</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  (function(){
+    // Helpers & keys
+    const LOCAL_PRODUCTS_KEY = 'ic_products_local';
+    const LOCAL_CART_KEY = 'ic_cart';
+    const $ = s => document.querySelector(s);
+    const $$ = s => Array.from(document.querySelectorAll(s));
+    const escapeHtml = s => s ? String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;') : '';
+    function formatPrice(v){ return '₹' + Number(v||0).toFixed(0); }
+    function getQueryParam(name){ const p = new URLSearchParams(location.search); return p.get(name); }
+
+    function loadProducts() {
+      try { const raw = localStorage.getItem(LOCAL_PRODUCTS_KEY); if (raw) return JSON.parse(raw) || []; }
+      catch(e){ console.error(e); }
+      try { const raw2 = localStorage.getItem('ic_products'); if (raw2) return JSON.parse(raw2) || []; } catch(e){}
+      return [];
+    }
+    function findProductById(id) {
+      const arr = loadProducts();
+      if (!arr || !arr.length) return null;
+      return arr.find(p => String(p.id) === String(id)) || null;
+    }
+
+    // Cart utilities
+    function loadCart(){ try { return JSON.parse(localStorage.getItem(LOCAL_CART_KEY) || '[]') || []; } catch(e){ return []; } }
+    function saveCart(cart){ try { localStorage.setItem(LOCAL_CART_KEY, JSON.stringify(cart)); updateCartCount(); } catch(e){} }
+    function updateCartCount(){ const el = $('#cart-count'); if (!el) return; const c = loadCart(); const qty = c.reduce((s,i)=>s+(Number(i.qty)||0),0); el.textContent = qty; }
+
+    function addToCart(product, qty){
+      if (!product || !product.id) return;
+      const cart = loadCart();
+      const idx = cart.findIndex(i => String(i.id) === String(product.id));
+      if (idx === -1) {
+        cart.push({ id: product.id, title: product.title, price: Number(product.price||0), qty: Number(qty||1), image: (product.images && product.images[0]) || product.image || 'images/placeholder.png' });
+      } else {
+        cart[idx].qty = Number(cart[idx].qty||0) + Number(qty||1);
+      }
+      saveCart(cart);
+      window.dispatchEvent(new CustomEvent('cart-updated', { detail: { count: cart.reduce((s,i)=>s+(Number(i.qty)||0),0) } }));
+    }
+
+    // Render not found
+    function renderNotFound() {
+      $('#product-root').innerHTML = `<div class="not-found"><h2>Product not found</h2><p class="muted">We couldn't find that product. It might have been removed or the link is broken.</p><p style="margin-top:1rem"><a href="products.html" class="btn ghost">Back to Products</a></p></div>`;
+    }
+
+    // Build product layout
+    function createProductLayout(prod) {
+      const images = Array.isArray(prod.images) && prod.images.length ? prod.images.slice() : (prod.image ? [prod.image] : []);
+      if (!images.length) images.push('images/placeholder.png');
+
+      return `
+        <div class="product-grid">
+          <section class="gallery">
+            <div style="position:relative;">
+              <img id="main-img" class="main-image" src="${escapeHtml(images[0])}" alt="${escapeHtml(prod.title)}" />
+              <button id="prev-img" class="btn ghost" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);">‹</button>
+              <button id="next-img" class="btn ghost" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);">›</button>
+            </div>
+            <div class="thumb-row" id="thumb-row">
+              ${images.map((src,i) => `<img data-index="${i}" src="${escapeHtml(src)}" class="${i===0 ? 'active':''}" alt="thumb-${i+1}" />`).join('')}
+            </div>
+          </section>
+
+          <aside class="info">
+            <div style="display:flex;justify-content:space-between;align-items:start;">
+              <div>
+                <div class="title">${escapeHtml(prod.title)}</div>
+                <div class="meta">${escapeHtml(prod.category || 'Uncategorized')} • ID: ${escapeHtml(prod.id || '')}</div>
+              </div>
+              <div style="text-align:right">
+                <div class="price">${formatPrice(prod.price)}</div>
+                <div class="small muted">Stock: ${typeof prod.stock !== 'undefined' ? Number(prod.stock) : '—'}</div>
+              </div>
+            </div>
+
+            <div class="desc" style="margin-top:0.6rem">${escapeHtml(prod.description || '')}</div>
+
+            <div class="specs">
+              ${prod.published === false ? '<span class="badge" style="background:#fff0f0;color:#ef4444">Not published</span>' : ''}
+            </div>
+
+            <div class="qty-row" style="margin-top:0.8rem">
+              <label style="margin:0;font-weight:700">Quantity</label>
+              <input id="qty" type="number" min="1" value="1" />
+            </div>
+
+            <div class="actions">
+              <button id="add-cart" class="btn primary">Add to Cart</button>
+              <button id="buy-now" class="btn ghost">Buy Now</button>
+              <a href="products.html" class="btn ghost">Back to Products</a>
+            </div>
+
+            <div style="margin-top:0.8rem" id="action-msg"></div>
+          </aside>
+        </div>
+      `;
+    }
+
+    // ---------- Image modal logic ----------
+    const modal = $('#img-modal');
+    const modalImage = $('#modal-image');
+    const modalClose = $('#img-close');
+    const modalLeft = $('#modal-left-arrow');
+    const modalRight = $('#modal-right-arrow');
+    const modalCounter = $('#modal-counter');
+    const modalDownload = $('#modal-download');
+
+    let modalImages = []; // array of src
+    let modalIndex = 0;
+
+    function openModal(images, index = 0) {
+      modalImages = Array.isArray(images) ? images.slice() : [images];
+      modalIndex = Math.max(0, Math.min(modalImages.length - 1, Number(index || 0)));
+      modalImage.src = modalImages[modalIndex];
+      modalDownload.href = modalImages[modalIndex] || '#';
+      modalCounter.textContent = `${modalIndex + 1} / ${modalImages.length}`;
+      modal.setAttribute('aria-hidden','false');
+
+      // small zoom in effect
+      modalImage.style.transform = 'scale(1.02)';
+      setTimeout(() => { modalImage.style.transform = 'scale(1)'; }, 10);
+
+      // trap focus (simple)
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal() {
+      modal.setAttribute('aria-hidden','true');
+      modalImage.src = '';
+      document.body.style.overflow = '';
+    }
+
+    function showModalIndex(i) {
+      if (!modalImages.length) return;
+      modalIndex = (i + modalImages.length) % modalImages.length;
+      modalImage.src = modalImages[modalIndex];
+      modalDownload.href = modalImages[modalIndex] || '#';
+      modalCounter.textContent = `${modalIndex + 1} / ${modalImages.length}`;
+    }
+
+    modalClose && modalClose.addEventListener('click', closeModal);
+    modalLeft && modalLeft.addEventListener('click', () => showModalIndex(modalIndex - 1));
+    modalRight && modalRight.addEventListener('click', () => showModalIndex(modalIndex + 1));
+
+    // close when clicking backdrop
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) closeModal();
+    });
+
+    // keyboard support
+    document.addEventListener('keydown', (e) => {
+      if (modal.getAttribute('aria-hidden') === 'false') {
+        if (e.key === 'Escape') closeModal();
+        if (e.key === 'ArrowLeft') showModalIndex(modalIndex - 1);
+        if (e.key === 'ArrowRight') showModalIndex(modalIndex + 1);
+      }
+    });
+
+    // ---------- Gallery wiring + page init ----------
+    function wireGallery(images) {
+      const mainImg = $('#main-img');
+      const thumbRow = $('#thumb-row');
+      let current = 0;
+
+      function setIndex(i) {
+        i = (i + images.length) % images.length;
+        current = i;
+        mainImg.src = images[i];
+        thumbRow.querySelectorAll('img').forEach(t => t.classList.remove('active'));
+        const sel = thumbRow.querySelector(`img[data-index="${i}"]`);
+        if (sel) sel.classList.add('active');
+      }
+
+      $('#prev-img').addEventListener('click', () => setIndex(current - 1));
+      $('#next-img').addEventListener('click', () => setIndex(current + 1));
+      thumbRow.addEventListener('click', (e) => {
+        const t = e.target.closest('img[data-index]');
+        if (!t) return;
+        setIndex(Number(t.dataset.index));
+      });
+
+      // Open modal when clicking main image or any thumb
+      mainImg.addEventListener('click', () => openModal(images, current));
+      thumbRow.addEventListener('click', (e) => {
+        const t = e.target.closest('img[data-index]');
+        if (!t) return;
+        openModal(images, Number(t.dataset.index));
+      });
+    }
+
+    // Init page
+    function init() {
+      const id = getQueryParam('id');
+      if (!id) {
+        $('#product-root').innerHTML = '<div class="not-found"><h2>No product specified</h2><p class="muted">Open the product from the <a href="products.html">Products</a> page.</p></div>';
+        return;
+      }
+
+      const prod = findProductById(id);
+      if (!prod) { renderNotFound(); return; }
+
+      $('#product-root').innerHTML = createProductLayout(prod);
+
+      const images = Array.isArray(prod.images) && prod.images.length ? prod.images.slice() : (prod.image ? [prod.image] : []);
+      if (!images.length) images.push('images/placeholder.png');
+
+      // gallery
+      wireGallery(images);
+
+      // add to cart & buy now
+      const qtyEl = document.getElementById('qty');
+      const addBtn = document.getElementById('add-cart');
+      const buyNow = document.getElementById('buy-now');
+      const actionMsg = document.getElementById('action-msg');
+
+      addBtn.addEventListener('click', () => {
+        const q = Math.max(1, Number(qtyEl.value || 1));
+        addToCart(prod, q);
+        actionMsg.innerHTML = `<div class="muted">Added ${q} × <strong>${escapeHtml(prod.title)}</strong> to cart. <a href="cart.html">View cart</a></div>`;
+      });
+
+      buyNow.addEventListener('click', () => {
+        const q = Math.max(1, Number(qtyEl.value || 1));
+        addToCart(prod, q);
+        location.href = 'checkout.html';
+      });
+
+      updateCartCount();
+
+      // react to storage changes (products or cart)
+      window.addEventListener('storage', (e) => {
+        if (e.key === LOCAL_PRODUCTS_KEY) {
+          const updated = findProductById(id);
+          if (!updated) { renderNotFound(); return; }
+          // simple full re-render
+          $('#product-root').innerHTML = createProductLayout(updated);
+          const imgs = Array.isArray(updated.images) && updated.images.length ? updated.images.slice() : (updated.image ? [updated.image] : ['images/placeholder.png']);
+          wireGallery(imgs);
+          updateCartCount();
+        }
+        if (e.key === LOCAL_CART_KEY) updateCartCount();
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', init);
+  })();
+  </script>
+</body>
+</html>

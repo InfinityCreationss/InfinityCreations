@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Products — InfinityCreations</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    /* Page-specific styles (keeps with the site's aesthetic) */
+    .products-hero { max-width:1200px; margin:1.25rem auto; padding:0 1rem; display:flex; flex-direction:column; gap:0.9rem; }
+    .controls { display:flex; gap:0.6rem; align-items:center; justify-content:space-between; flex-wrap:wrap; }
+    .controls .left { display:flex; gap:0.6rem; align-items:center; }
+    .controls input[type="search"] { padding:0.6rem 0.8rem; border-radius:10px; border:1px solid rgba(0,0,0,0.06); min-width:220px; }
+    .controls select { padding:0.55rem;border-radius:8px;border:1px solid rgba(0,0,0,0.06) }
+    .products-grid { max-width:1200px; margin:1rem auto; padding:0 1rem; display:grid; grid-template-columns: repeat(4, 1fr); gap:1rem; }
+    @media (max-width:1100px){ .products-grid{grid-template-columns: repeat(3,1fr)} }
+    @media (max-width:820px){ .products-grid{grid-template-columns: repeat(2,1fr)} .controls{flex-direction:column;align-items:stretch} }
+    @media (max-width:480px){ .products-grid{grid-template-columns:1fr} }
+
+    .product-card { background:var(--card); border-radius:12px; padding:0.8rem; box-shadow:var(--shadow-tight); display:flex; flex-direction:column; gap:0.6rem; min-height:260px; }
+    .product-card img { width:100%; height:160px; object-fit:cover; border-radius:10px; display:block; }
+    .product-meta .title { font-weight:800; font-size:1rem; margin-bottom:0.2rem; }
+    .product-meta .price { color:var(--accent-2); font-weight:800; margin-bottom:0.25rem; }
+    .product-meta .desc { color:var(--muted); font-size:0.92rem; line-height:1.25; min-height:2.5em; }
+    .card-actions { display:flex; gap:0.5rem; margin-top:auto; }
+    .card-actions .btn { flex:1; text-align:center; padding:0.5rem 0.6rem; border-radius:8px; }
+    .empty-state { text-align:center; padding:3rem; color:var(--muted); background:var(--card); border-radius:12px; box-shadow:var(--shadow-tight) }
+    .filters-row { display:flex; gap:0.6rem; align-items:center; flex-wrap:wrap; }
+    .badge { background:linear-gradient(90deg,#ff9bbd,#7ea3ff); color:white; padding:0.2rem 0.5rem; border-radius:999px; font-weight:700; font-size:0.85rem; }
+  </style>
+</head>
+<body>
+  <!-- Shared header -->
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="index.html" class="brand" aria-label="InfinityCreations home">
+        <img src="logo.jpeg" alt="InfinityCreations logo" style="height:52px;width:auto;border-radius:8px" onerror="this.style.display='none'">
+        <div class="brand-text">
+          <span class="brand-title">InfinityCreations</span>
+          <span class="brand-sub">Handmade gifts</span>
+        </div>
+      </a>
+
+      <nav class="nav" role="navigation" aria-label="Main navigation">
+        <a href="index.html">Home</a>
+        <a href="products.html" aria-current="page">Products</a>
+        <a href="about.html">About</a>
+        <a href="contact.html">Contact</a>
+      </nav>
+
+      <div class="header-actions">
+        <a class="btn ghost" href="cart.html">Cart (<span id="cart-count">0</span>)</a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="products-hero">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:0.8rem;flex-wrap:wrap">
+        <div>
+          <h1 style="margin:0">All Products</h1>
+          <div class="muted" style="margin-top:0.25rem">Browse handmade embroidery hoops, soft toys, and gifting items.</div>
+        </div>
+
+        <div class="filters-row" aria-hidden="false">
+          <div class="left">
+            <input id="search" type="search" placeholder="Search products, e.g. 'elephant hoop', 'teddy'">
+            <select id="category-filter" aria-label="Filter by category">
+              <option>All</option>
+            </select>
+            <select id="sort-select" aria-label="Sort products">
+              <option value="relevance">Sort: Relevance</option>
+              <option value="price-asc">Price: Low → High</option>
+              <option value="price-desc">Price: High → Low</option>
+              <option value="newest">Newest</option>
+            </select>
+          </div>
+
+          <div style="display:flex;gap:0.6rem;align-items:center">
+            <div class="badge" id="total-count">0 items</div>
+            <a class="btn ghost" href="admin.html" title="Admin (demo)">Admin</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="products-container">
+      <div id="products-grid" class="products-grid" aria-live="polite"></div>
+
+      <div style="max-width:1200px;margin:1rem auto;padding:0 1rem">
+        <div id="no-products" class="empty-state" style="display:none">
+          <h3>No products found</h3>
+          <p class="muted">Try changing filters or add products from the admin page (demo).</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div>© InfinityCreations — handcrafted gifts</div>
+      <div class="muted">Made with ❤️</div>
+    </div>
+  </footer>
+
+  <!-- Shared script (site logic) -->
+  <script src="script.js"></script>
+
+  <script>
+    (function(){
+      const $ = s => document.querySelector(s);
+      const $$ = s => Array.from(document.querySelectorAll(s));
+
+      // Helper: render products by calling functions from script.js
+      async function refreshProductsUI() {
+        // Wait for product list to be loaded by script.js (window.IC.getProducts)
+        let attempts = 0;
+        while ((!window.IC || typeof window.IC.getProducts !== 'function') && attempts < 40) {
+          await new Promise(r => setTimeout(r, 80));
+          attempts++;
+        }
+
+        const pList = (window.IC && typeof window.IC.getProducts === 'function') ? window.IC.getProducts() : [];
+        // normalize to array if object
+        const products = Array.isArray(pList) ? pList : Object.values(pList || []);
+
+        // setup categories
+        const catSel = $('#category-filter');
+        const cats = Array.from(new Set((products || []).map(p => p.category || 'Uncategorized'))).sort();
+        // clear and add All
+        catSel.innerHTML = '<option value="All">All</option>';
+        cats.forEach(c => {
+          const opt = document.createElement('option'); opt.value = c; opt.textContent = c; catSel.appendChild(opt);
+        });
+
+        renderGrid(products);
+        updateCounts(products.length);
+      }
+
+      function renderGrid(products) {
+        const grid = $('#products-grid');
+        const noBox = $('#no-products');
+        grid.innerHTML = '';
+
+        const filter = $('#category-filter').value || 'All';
+        const q = ($('#search').value || '').trim().toLowerCase();
+        const sort = $('#sort-select').value || 'relevance';
+
+        let list = (products || []).filter(p => {
+          const matchCat = filter === 'All' || !filter || (p.category || 'Uncategorized') === filter;
+          const matchQ = !q || (p.title && p.title.toLowerCase().includes(q)) || (p.description && p.description.toLowerCase().includes(q));
+          return matchCat && matchQ;
+        });
+
+        // sorting
+        if (sort === 'price-asc') list.sort((a,b) => Number(a.price||0) - Number(b.price||0));
+        else if (sort === 'price-desc') list.sort((a,b) => Number(b.price||0) - Number(a.price||0));
+        else if (sort === 'newest') list.sort((a,b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+
+        if (!list.length) {
+          noBox.style.display = '';
+          $('#products-grid').style.display = 'none';
+          $('#total-count').textContent = '0 items';
+          return;
+        } else {
+          noBox.style.display = 'none';
+          $('#products-grid').style.display = '';
+        }
+
+        list.forEach(p => {
+          const card = document.createElement('article');
+          card.className = 'product-card';
+          const img = p.image || (p.images && p.images[0]) || 'images/placeholder.png';
+          card.innerHTML = `
+            <a class="thumb-link" href="product.html?id=${encodeURIComponent(p.id)}" title="${escapeHtml(p.title)}">
+              <img loading="lazy" src="${escapeHtml(img)}" alt="${escapeHtml(p.title)}">
+            </a>
+            <div class="product-meta">
+              <div class="title">${escapeHtml(p.title)}</div>
+              <div class="price">${formatPrice(p.price)}</div>
+              <div class="desc">${escapeHtml((p.description||'').slice(0,140))}${(p.description||'').length>140? '...' : ''}</div>
+            </div>
+            <div class="card-actions">
+              <a class="btn primary" href="product.html?id=${encodeURIComponent(p.id)}">View</a>
+              <button class="btn ghost add-btn" data-id="${p.id}">Add</button>
+            </div>
+          `;
+          grid.appendChild(card);
+        });
+
+        // bind add buttons
+        $$('.add-btn').forEach(b => {
+          b.addEventListener('click', (e) => {
+            const id = e.currentTarget.dataset.id;
+            const addFn = (window.IC && typeof window.IC.addToCart === 'function') ? window.IC.addToCart : (window.addToCart || null);
+            if (addFn) { addFn(id, 1); if (window.IC && typeof window.IC.updateCartUI === 'function') window.IC.updateCartUI(); alert('Added to cart'); }
+            else {
+              // fallback localStorage
+              try {
+                const k = 'ic_cart';
+                const cart = JSON.parse(localStorage.getItem(k) || '[]');
+                const ex = cart.find(i => String(i.id) === String(id));
+                if (ex) ex.qty = (Number(ex.qty)||0) + 1; else {
+                  // obtain title/price from products array
+                  const prod = products.find(x => String(x.id) === String(id)) || {};
+                  cart.push({ id, title: prod.title || id, price: prod.price || 0, qty: 1, image: prod.image || (prod.images && prod.images[0]) || '' });
+                }
+                localStorage.setItem(k, JSON.stringify(cart));
+                if (window.IC && typeof window.IC.updateCartUI === 'function') window.IC.updateCartUI();
+                alert('Added to cart (fallback)');
+              } catch(err){ console.error(err); alert('Failed to add to cart'); }
+            }
+          });
+        });
+
+        // update item count
+        $('#total-count').textContent = `${list.length} ${list.length === 1 ? 'item' : 'items'}`;
+      }
+
+      // small helpers
+      function escapeHtml(s){ if (!s) return ''; return String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;'); }
+      function formatPrice(v){ return window.formatPrice ? window.formatPrice(v) : ('₹'+Number(v||0).toFixed(0)); }
+
+      // wire controls
+      $('#search').addEventListener('input', () => {
+        // small debounce
+        if (window.__prd_search_timer) clearTimeout(window.__prd_search_timer);
+        window.__prd_search_timer = setTimeout(() => {
+          refreshProductsUI();
+        }, 180);
+      });
+
+      $('#category-filter').addEventListener('change', () => refreshProductsUI());
+      $('#sort-select').addEventListener('change', () => refreshProductsUI());
+
+      // initial load
+      refreshProductsUI();
+
+      // update UI if products or cart change in other tabs
+      window.addEventListener('storage', (e) => {
+        if (e.key === 'ic_products_local' || e.key === 'ic_cart' || e.key === 'ic_active_coupon') {
+          refreshProductsUI();
+          if (window.IC && typeof window.IC.updateCartUI === 'function') window.IC.updateCartUI();
+        }
+      });
+
+      // expose refresh function (optional)
+      window.refreshProductsUI = refreshProductsUI;
+    })();
+  </script>
+</body>
+</html>

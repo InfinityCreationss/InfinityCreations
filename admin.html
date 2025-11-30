@@ -1,0 +1,613 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin Dashboard — InfinityCreations</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    :root{
+      --bg: #f6f9fc;
+      --card: #fff;
+      --muted: #6b7280;
+      --accent: #6a8cff;
+      --danger: #ef4444;
+      --shadow: 0 8px 30px rgba(14,18,28,0.06);
+    }
+    html,body{height:100%;margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial;background:var(--bg);color:#0f172a}
+    .container{max-width:1200px;margin:0 auto;padding:1rem}
+    .site-header{background:transparent;padding:0.5rem 0}
+    .header-inner{display:flex;align-items:center;gap:1rem;justify-content:space-between}
+    .brand{display:flex;align-items:center;gap:0.6rem;text-decoration:none;color:inherit}
+    .brand img{height:44px;border-radius:6px}
+    .brand-text .brand-title{font-weight:800}
+    .nav a{margin-right:0.6rem;text-decoration:none;color:var(--muted)}
+    .header-actions .btn{margin-left:0.4rem}
+
+    /* Admin layout */
+    .admin-hero { max-width:1200px; margin: 1rem auto; padding: 0 1rem; }
+    .admin-wrap { background:var(--bg); padding:0 0 2rem 0; }
+    .panel { background:var(--card); border-radius:12px; box-shadow:var(--shadow); padding:1rem; }
+    .grid { display:grid; grid-template-columns: 1fr 420px; gap:1rem; align-items:start; }
+    @media (max-width:980px){ .grid{grid-template-columns:1fr} }
+
+    /* form */
+    .form-row{display:flex;gap:0.75rem;align-items:center}
+    label{font-weight:700;display:block;margin-bottom:0.25rem}
+    input[type="text"], input[type="number"], textarea, select { width:100%; padding:0.6rem; border-radius:8px; border:1px solid rgba(2,6,23,0.06); font-size:1rem }
+    textarea { min-height:120px; resize:vertical }
+    .muted { color:var(--muted) }
+    .small { font-size:0.9rem; color:var(--muted) }
+
+    /* thumbs */
+    .thumbs { display:flex; gap:0.5rem; flex-wrap:wrap; margin-top:0.5rem }
+    .thumbs img { width:84px; height:84px; object-fit:cover; border-radius:8px; border:1px solid rgba(0,0,0,0.06); cursor:pointer }
+
+    /* product list */
+    .product-list{ margin-top:1rem; display:flex; flex-direction:column; gap:0.5rem; max-height:560px; overflow:auto; padding-right:0.5rem }
+    .product-card { display:flex; gap:0.75rem; padding:0.6rem; border-radius:10px; align-items:center; border:1px solid rgba(2,6,23,0.03); }
+    .product-card img { width:84px; height:84px; object-fit:cover; border-radius:8px }
+    .product-meta { flex:1; }
+    .product-meta .title { font-weight:800 }
+    .product-meta .meta { color:var(--muted); font-size:0.92rem; margin-top:0.25rem }
+    .product-actions { display:flex; gap:0.4rem; align-items:center }
+
+    .btn { cursor:pointer; border:none; padding:0.5rem 0.7rem; border-radius:8px; font-weight:700; }
+    .btn.primary { background:var(--accent); color:white; box-shadow:0 8px 20px rgba(106,140,255,0.12) }
+    .btn.ghost { background:transparent; border:1px solid rgba(2,6,23,0.06) }
+    .btn.warn { background:#f97316; color:white }
+    .btn.danger { background:var(--danger); color:white }
+    .toggle { cursor:pointer; padding:0.35rem 0.5rem; border-radius:8px; border:1px solid rgba(2,6,23,0.06); background:#fff }
+
+    .footer-note { margin-top:0.6rem; color:var(--muted); font-size:0.9rem }
+
+    /* modal preview */
+    .modal { position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(2,6,23,0.45); z-index:60 }
+    .modal[aria-hidden="false"]{ display:flex }
+    .modal-panel { background:var(--card); border-radius:12px; padding:1rem; max-width:900px; width:96%; max-height:90vh; overflow:auto }
+    .modal-panel img { width:100%; height:auto; border-radius:10px; display:block; }
+
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header class="site-header container" role="banner">
+    <div class="header-inner">
+      <a href="index.html" class="brand" aria-label="InfinityCreations home">
+        <img src="logo.jpeg" alt="InfinityCreations logo" onerror="this.style.display='none'"/>
+        <div class="brand-text">
+          <span class="brand-title">InfinityCreations</span>
+          <span class="brand-sub muted">Admin Dashboard</span>
+        </div>
+      </a>
+
+      <nav class="nav" aria-label="Main">
+        <a href="index.html">Home</a>
+        <a href="products.html">Products</a>
+        <a href="contact.html">Contact</a>
+      </nav>
+
+      <div class="header-actions">
+        <a class="btn ghost" href="index.html">View Site</a>
+        <button id="logout-btn" class="btn ghost">Logout</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main admin area -->
+  <main class="container admin-hero">
+    <div class="admin-wrap panel" role="main">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:1rem;margin-bottom:1rem">
+        <div>
+          <h2 style="margin:0">Product Listing</h2>
+          <div class="small muted">Add, edit, delete products. Changes are saved in your browser (demo).</div>
+        </div>
+
+        <div style="display:flex;gap:0.6rem;align-items:center">
+          <button id="export-json" class="btn ghost">Export JSON</button>
+          <button id="import-json" class="btn ghost">Import JSON</button>
+          <input id="import-file" type="file" accept="application/json" style="display:none" />
+        </div>
+      </div>
+
+      <div class="grid">
+        <!-- Left: form -->
+        <section>
+          <div class="panel">
+            <h3 style="margin-top:0">Add / Edit Product</h3>
+
+            <form id="product-form" onsubmit="return false;" autocomplete="off">
+              <div style="display:flex;gap:0.6rem">
+                <div style="flex:1">
+                  <label for="p-title">Title</label>
+                  <input id="p-title" type="text" placeholder="e.g. Floral Embroidery Hoop" required />
+                </div>
+
+                <div style="width:180px">
+                  <label for="p-id">Product ID</label>
+                  <input id="p-id" type="text" placeholder="auto-generated or custom" />
+                </div>
+              </div>
+
+              <div style="display:flex;gap:0.6rem;margin-top:0.6rem">
+                <div style="flex:1">
+                  <label for="p-category">Category</label>
+                  <input id="p-category" type="text" placeholder="Hoops / Soft Toys / Gifts" />
+                </div>
+
+                <div style="width:160px">
+                  <label for="p-price">Price (₹)</label>
+                  <input id="p-price" type="number" min="0" step="1" />
+                </div>
+
+                <div style="width:120px">
+                  <label for="p-stock">Stock</label>
+                  <input id="p-stock" type="number" min="0" step="1" value="10" />
+                </div>
+              </div>
+
+              <label for="p-desc" style="margin-top:0.6rem">Description</label>
+              <textarea id="p-desc" placeholder="Write product description..."></textarea>
+
+              <label style="margin-top:0.6rem">Images (multiple)</label>
+              <input id="p-images" type="file" accept="image/*" multiple />
+              <div class="thumbs" id="thumbs" aria-live="polite"></div>
+
+              <div style="display:flex;gap:0.6rem;margin-top:0.8rem">
+                <button id="save-product" class="btn primary">Save Product</button>
+                <button id="reset-form" class="btn ghost" type="button">Clear</button>
+                <button id="preview-product" class="btn ghost" type="button">Preview</button>
+              </div>
+
+              <div class="footer-note">Note: Images are stored in your browser as base64 (demo). For production use server storage.</div>
+            </form>
+          </div>
+        </section>
+
+        <!-- Right: existing products -->
+        <aside>
+          <div class="panel">
+            <h3 style="margin-top:0">Existing Products</h3>
+
+            <div style="margin:0.6rem 0;display:flex;gap:0.6rem;align-items:center;">
+              <input id="search-products" placeholder="Search title or category" style="flex:1;padding:0.5rem;border-radius:8px;border:1px solid rgba(2,6,23,0.06)" />
+              <select id="filter-cat" style="padding:0.5rem;border-radius:8px;border:1px solid rgba(2,6,23,0.06)">
+                <option value="All">All</option>
+              </select>
+            </div>
+
+            <div class="product-list" id="product-list" aria-live="polite"></div>
+            <div style="margin-top:0.8rem;display:flex;gap:0.6rem;align-items:center;">
+              <button id="clear-all" class="btn danger">Delete All Local Products</button>
+              <div class="small muted" style="margin-left:auto">Local products: <span id="local-count">0</span></div>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </main>
+
+  <!-- preview modal -->
+  <div id="preview-modal" class="modal" aria-hidden="true">
+    <div class="modal-panel" role="dialog" aria-modal="true">
+      <button id="close-modal" class="btn ghost" style="float:right">Close</button>
+      <div id="preview-content"></div>
+    </div>
+  </div>
+
+  <footer class="site-footer container" role="contentinfo" style="padding:1rem 0;">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <div>© InfinityCreations — handcrafted gifts</div>
+      <div class="muted small">Admin demo • localStorage</div>
+    </div>
+  </footer>
+
+  <!-- Admin script -->
+  <script>
+  (function(){
+    // Keys & helpers
+    const LOCAL_PRODUCTS_KEY = 'ic_products_local';
+    const ADMIN_SESSION_KEY = 'ic_admin_logged_in';
+
+    const $ = sel => document.querySelector(sel);
+    const $$ = sel => Array.from(document.querySelectorAll(sel));
+    const uid = (p='p') => `${p}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,7)}`;
+    const fmtPrice = v => '₹' + Number(v||0).toFixed(0);
+    const persist = (arr) => {
+      localStorage.setItem(LOCAL_PRODUCTS_KEY, JSON.stringify(arr, null, 2));
+      // notify other scripts/pages by dispatching a custom event and attempting to call window.IC if present
+      window.dispatchEvent(new CustomEvent('products-updated', { detail: { count: (arr||[]).length } }));
+      if (window.IC && typeof window.IC.refreshProducts === 'function') window.IC.refreshProducts();
+    };
+
+    // redirect to login if not admin
+    function ensureAdmin() {
+      try {
+        if (localStorage.getItem(ADMIN_SESSION_KEY) !== '1') {
+          // redirect to login page
+          location.href = 'admin-login.html';
+          return false;
+        }
+      } catch (e) { /* ignore */ }
+      return true;
+    }
+    if (!ensureAdmin()) return;
+
+    // element refs
+    const form = $('#product-form');
+    const titleEl = $('#p-title');
+    const idEl = $('#p-id');
+    const catEl = $('#p-category');
+    const priceEl = $('#p-price');
+    const stockEl = $('#p-stock');
+    const descEl = $('#p-desc');
+    const imagesEl = $('#p-images');
+    const thumbs = $('#thumbs');
+
+    const listWrap = $('#product-list');
+    const localCount = $('#local-count');
+    const filterCat = $('#filter-cat');
+    const searchInput = $('#search-products');
+
+    const saveBtn = $('#save-product');
+    const resetBtn = $('#reset-form');
+    const previewBtn = $('#preview-product');
+    const logoutBtn = $('#logout-btn');
+    const clearAllBtn = $('#clear-all');
+
+    const exportBtn = $('#export-json');
+    const importBtn = $('#import-json');
+    const importFile = $('#import-file');
+
+    const previewModal = $('#preview-modal');
+    const previewContent = $('#preview-content');
+    const closeModal = $('#close-modal');
+
+    // state
+    let localProducts = [];
+    let editingId = null;
+    let stagedImages = []; // base64 strings for current form
+
+    // load from storage
+    function loadLocalProducts() {
+      try {
+        localProducts = JSON.parse(localStorage.getItem(LOCAL_PRODUCTS_KEY) || '[]') || [];
+      } catch (e) { console.error('loadLocalProducts', e); localProducts = []; }
+    }
+
+    function renderFilterOptions() {
+      const cats = Array.from(new Set(localProducts.map(p => p.category || 'Uncategorized'))).sort();
+      filterCat.innerHTML = '<option value="All">All</option>';
+      cats.forEach(c => {
+        const o = document.createElement('option'); o.value = c; o.textContent = c; filterCat.appendChild(o);
+      });
+    }
+
+    // render product list
+    function renderProducts() {
+      listWrap.innerHTML = '';
+      const filter = filterCat.value || 'All';
+      const q = (searchInput.value || '').trim().toLowerCase();
+      const items = localProducts.filter(p => {
+        const okCat = filter === 'All' || !filter || (p.category || 'Uncategorized') === filter;
+        const okQ = !q || (p.title && p.title.toLowerCase().includes(q)) || (p.category && p.category.toLowerCase().includes(q));
+        return okCat && okQ;
+      });
+
+      if (!items.length) {
+        listWrap.innerHTML = '<div class="small muted">No local products yet. Add some from the form.</div>';
+      } else {
+        items.forEach(p => {
+          const node = document.createElement('div');
+          node.className = 'product-card';
+          node.innerHTML = `
+            <img src="${escapeHtml(p.images && p.images[0] ? p.images[0] : p.image || 'images/placeholder.png')}" alt="${escapeHtml(p.title)}" />
+            <div class="product-meta">
+              <div class="title">${escapeHtml(p.title)}</div>
+              <div class="meta">${escapeHtml(p.category || 'Uncategorized')} • ${fmtPrice(p.price)} • ID: ${escapeHtml(p.id)}</div>
+            </div>
+            <div class="product-actions">
+              <button class="btn ghost" data-id="${p.id}" data-action="view">View</button>
+              <button class="btn" data-id="${p.id}" data-action="edit">Edit</button>
+              <button class="btn danger" data-id="${p.id}" data-action="delete">Delete</button>
+              <button class="toggle" data-id="${p.id}" data-action="toggle">${p.published ? 'Unpublish' : 'Publish'}</button>
+            </div>
+          `;
+          listWrap.appendChild(node);
+        });
+      }
+
+      localCount.textContent = localProducts.length;
+      renderFilterOptions();
+    }
+
+    // escape helper (small)
+    function escapeHtml(s) {
+      if (!s) return '';
+      return String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;');
+    }
+
+    // file -> base64
+    function fileToBase64(file) {
+      return new Promise((resolve, reject) => {
+        const fr = new FileReader();
+        fr.onload = () => resolve(fr.result);
+        fr.onerror = reject;
+        fr.readAsDataURL(file);
+      });
+    }
+
+    // preview staged images
+    function renderThumbs() {
+      thumbs.innerHTML = '';
+      stagedImages.forEach((src, i) => {
+        const img = document.createElement('img');
+        img.src = src;
+        img.alt = `img-${i+1}`;
+        img.title = 'Click to remove';
+        img.addEventListener('click', () => {
+          if (!confirm('Remove this image?')) return;
+          stagedImages.splice(i,1);
+          renderThumbs();
+        });
+        thumbs.appendChild(img);
+      });
+    }
+
+    // handle file input
+    imagesEl.addEventListener('change', async (e) => {
+      const files = Array.from(e.target.files || []);
+      if (!files.length) return;
+      for (const f of files.slice(0,12)) {
+        try {
+          const bs = await fileToBase64(f);
+          stagedImages.push(bs);
+        } catch (err) {
+          console.error('file read err', err);
+        }
+      }
+      renderThumbs();
+      imagesEl.value = '';
+    });
+
+    // reset form
+    function resetForm() {
+      editingId = null;
+      form.reset();
+      stagedImages = [];
+      renderThumbs();
+      idEl.value = '';
+      saveBtn.textContent = 'Save Product';
+    }
+
+    resetBtn.addEventListener('click', resetForm);
+
+    // preview product modal
+    previewBtn.addEventListener('click', () => {
+      const data = gatherFormData();
+      showPreview(data);
+    });
+
+    function showPreview(p) {
+      previewContent.innerHTML = '';
+      const html = `
+        <h2 style="margin-top:0">${escapeHtml(p.title)}</h2>
+        <div style="display:flex;gap:1rem;flex-wrap:wrap">
+          ${ (p.images||[]).map(src => `<img src="${src}" style="width:180px;height:180px;object-fit:cover;border-radius:8px" />`).join('') }
+        </div>
+        <p class="muted" style="margin-top:0.75rem">${escapeHtml(p.description)}</p>
+        <div style="margin-top:0.5rem;font-weight:800">${fmtPrice(p.price)}</div>
+      `;
+      previewContent.innerHTML = html;
+      previewModal.setAttribute('aria-hidden','false');
+    }
+    closeModal.addEventListener('click', () => previewModal.setAttribute('aria-hidden','true'));
+    previewModal.addEventListener('click', (e) => { if (e.target === previewModal) previewModal.setAttribute('aria-hidden','true'); });
+
+    // gather data from form
+    function gatherFormData() {
+      const title = titleEl.value.trim();
+      const id = idEl.value.trim() || uid('prod');
+      const category = catEl.value.trim() || 'Uncategorized';
+      const price = Number(priceEl.value || 0);
+      const stock = Number(stockEl.value || 0);
+      const description = descEl.value.trim();
+      const images = stagedImages.slice();
+      return { id, title, category, price, stock, description, images, published: true, createdAt: new Date().toISOString() };
+    }
+
+    // Save product (add or update)
+    saveBtn.addEventListener('click', async () => {
+      const data = gatherFormData();
+      if (!data.title) return alert('Enter product title');
+      if (!data.images || !data.images.length) {
+        if (!confirm('No images provided. Continue?')) return;
+      }
+
+      // if editing, replace
+      if (editingId) {
+        const idx = localProducts.findIndex(p => String(p.id) === String(editingId));
+        if (idx === -1) { alert('Edited product not found'); resetForm(); return; }
+        // preserve createdAt
+        data.createdAt = localProducts[idx].createdAt || data.createdAt;
+        localProducts[idx] = {
+          ...localProducts[idx],
+          id: data.id,
+          title: data.title,
+          category: data.category,
+          price: data.price,
+          stock: data.stock,
+          description: data.description,
+          images: data.images,
+          image: data.images[0] || (localProducts[idx].image||''),
+          published: data.published
+        };
+        persist(localProducts);
+        renderProducts();
+        alert('Product updated');
+        resetForm();
+        return;
+      }
+
+      // new product
+      const newP = {
+        id: data.id,
+        title: data.title,
+        category: data.category,
+        price: data.price,
+        stock: data.stock,
+        description: data.description,
+        images: data.images,
+        image: data.images[0] || '',
+        published: data.published,
+        createdAt: data.createdAt
+      };
+      localProducts.unshift(newP);
+      persist(localProducts);
+      renderProducts();
+      alert('Product added locally (demo).');
+      resetForm();
+    });
+
+    // product actions (view/edit/delete/toggle)
+    listWrap.addEventListener('click', (e) => {
+      const btn = e.target.closest('button');
+      if (!btn) return;
+      const action = btn.dataset.action;
+      const id = btn.dataset.id;
+      if (!action || !id) return;
+
+      if (action === 'view') {
+        const p = localProducts.find(x => String(x.id) === String(id));
+        if (!p) return alert('Product not found');
+        showPreview(p);
+        return;
+      }
+
+      if (action === 'edit') {
+        const p = localProducts.find(x => String(x.id) === String(id));
+        if (!p) return alert('Product not found');
+        // populate form
+        editingId = p.id;
+        titleEl.value = p.title || '';
+        idEl.value = p.id || '';
+        catEl.value = p.category || '';
+        priceEl.value = p.price || 0;
+        stockEl.value = p.stock || 0;
+        descEl.value = p.description || '';
+        stagedImages = (p.images && p.images.slice()) || (p.image ? [p.image] : []);
+        renderThumbs();
+        saveBtn.textContent = 'Update Product';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+      }
+
+      if (action === 'delete') {
+        if (!confirm('Delete product? This cannot be undone.')) return;
+        localProducts = localProducts.filter(x => String(x.id) !== String(id));
+        persist(localProducts);
+        renderProducts();
+        return;
+      }
+
+      if (action === 'toggle') {
+        const idx = localProducts.findIndex(x => String(x.id) === String(id));
+        if (idx === -1) return;
+        localProducts[idx].published = !localProducts[idx].published;
+        persist(localProducts);
+        renderProducts();
+        return;
+      }
+    });
+
+    // export & import
+    exportBtn.addEventListener('click', () => {
+      const data = JSON.stringify(localProducts || [], null, 2);
+      const blob = new Blob([data], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'infinitycreations-products.json';
+      document.body.appendChild(a); a.click(); a.remove();
+      URL.revokeObjectURL(a.href);
+    });
+
+    importBtn.addEventListener('click', () => importFile.click());
+    importFile.addEventListener('change', (e) => {
+      const f = e.target.files && e.target.files[0];
+      if (!f) return;
+      const fr = new FileReader();
+      fr.onload = () => {
+        try {
+          const arr = JSON.parse(fr.result);
+          if (!Array.isArray(arr)) throw new Error('Invalid JSON');
+          // Basic validation and merging: ensure id/title
+          const valid = arr.filter(it => it && it.id && it.title).map(it => ({
+            id: it.id,
+            title: it.title,
+            category: it.category || 'Uncategorized',
+            price: Number(it.price || 0),
+            stock: Number(it.stock || 0),
+            description: it.description || '',
+            images: it.images || (it.image ? [it.image] : []),
+            image: (it.images && it.images[0]) || it.image || '',
+            published: it.published !== undefined ? !!it.published : true,
+            createdAt: it.createdAt || new Date().toISOString()
+          }));
+          // merge: put imported items at front
+          localProducts = [...valid, ...localProducts];
+          persist(localProducts);
+          renderProducts();
+          alert('Imported ' + valid.length + ' products');
+        } catch (err) { alert('Invalid file'); console.error(err); }
+      };
+      fr.readAsText(f);
+      importFile.value = '';
+    });
+
+    // clear all local products
+    clearAllBtn.addEventListener('click', () => {
+      if (!confirm('Delete ALL local products? This cannot be undone.')) return;
+      localProducts = [];
+      persist(localProducts);
+      renderProducts();
+    });
+
+    // logout
+    logoutBtn.addEventListener('click', () => {
+      localStorage.removeItem(ADMIN_SESSION_KEY);
+      // do NOT auto-delete products; just redirect to login
+      location.href = 'admin-login.html';
+    });
+
+    // search & filter wiring
+    searchInput.addEventListener('input', () => renderProducts());
+    filterCat.addEventListener('change', () => renderProducts());
+
+    // initialize on load
+    (function init() {
+      loadLocalProducts();
+      renderProducts();
+
+      // expose helper to global script if needed
+      window.IC = window.IC || {};
+      window.IC.refreshProducts = function() {
+        loadLocalProducts();
+        renderProducts();
+      };
+
+      // listen to custom products-updated events from other tabs/pages
+      window.addEventListener('products-updated', (e) => {
+        loadLocalProducts(); renderProducts();
+      });
+
+      // also listen for storage events (other tabs)
+      window.addEventListener('storage', (e) => {
+        if (e.key === LOCAL_PRODUCTS_KEY) { loadLocalProducts(); renderProducts(); }
+      });
+
+    })();
+
+  })();
+  </script>
+</body>
+</html>

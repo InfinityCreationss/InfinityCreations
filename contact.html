@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>InfinityCreations — Contact</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="header-inner">
+        <a href="index.html" class="brand">
+          <img src="logo.jpeg" alt="InfinityCreations infinity sign logo" style="height:65px;width:auto;margin-right:4px"/>
+          <div class="brand-text">
+            <span class="brand-title">InfinityCreations</span>
+            <span class="brand-sub">Handmade gifts & hoops</span>
+          </div>
+        </a>
+
+        <nav class="nav">
+          <a href="index.html">Home</a>
+          <a href="products.html">Products</a>
+          <a href="about.html">About</a>
+          <a href="contact.html">Contact</a>
+        </nav>
+
+        <div class="header-actions">
+          <button id="cart-btn" class="btn ghost">
+            Cart (<span id="cart-count">0</span>)
+          </button>
+        </div>
+      </div>
+    </header>
+    <main class="container">
+      <section class="section contact">
+        <h1>Contact</h1>
+        <p>Reach out for custom orders or wholesale inquiries.</p>
+        <form
+          id="contact-form"
+          class="contact-form"
+          onsubmit="event.preventDefault(); alert('This demo does not send messages.');"
+        >
+          <div class="row">
+            <input type="text" placeholder="Your name" required /><input
+              type="email"
+              placeholder="Email"
+              required
+            />
+          </div>
+          <textarea rows="5" placeholder="Message" required></textarea>
+          <div class="form-actions">
+            <button class="btn primary" type="submit">Send Message</button>
+          </div>
+        </form>
+      </section>
+    </main>
+    <footer class="site-footer container footer-inner">
+      All Copy Rights Reserved @ InfintyCreations
+    </footer>
+    <script src="script.js" type="module"></script>
+  </body>
+</html>
